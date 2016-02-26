@@ -18,6 +18,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join('/node_modules/', '/')));
 
 app.use(function(req, res) {
   Router.match({ routes: routes.default, location: req.url }, function(err, redirectLocation, renderProps) {
@@ -35,6 +36,22 @@ app.use(function(req, res) {
   });
 });
 
-app.listen(app.get('port'), function() {
-  console.log('Express server listening on port ' + app.get('port'));
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+var onlineUsers = 0;
+
+io.sockets.on('connection', function(socket){
+    console.log("DSDFSFD");
+    onlineUsers++;
+
+    io.sockets.emit('onlineUsers', {onlineUsers: onlineUsers});
+
+    socket.on('disconnect', function() {
+        onlineUsers--;
+        io.sockets.emit('onlineUsers', {onlineUsers: onlineUsers});
+    });
+});
+
+server.listen(app.get('port'), function() {
+    console.log("Express server listening on port " + app.get('port'));
 });
